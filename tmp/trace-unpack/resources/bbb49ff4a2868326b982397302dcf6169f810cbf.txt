@@ -1,1 +1,0 @@
-{"rid":"CR16TH6A7NHX18GYNBNK","sid":"144-7498255-0114546","mid":"ATVPDKIKX0DER","sn":"www.amazon.com","reqs":[{"cel":{"k":"res_mcm","t":32807,"m":2}},{"cel":{"k":"res_mcm","t":40860,"m":202}}]}

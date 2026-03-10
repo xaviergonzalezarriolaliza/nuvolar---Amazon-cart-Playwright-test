@@ -7,7 +7,9 @@
     "test:headed": "playwright test --headed",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "cgen": "npx playwright codegen"
+    "cgen": "npx playwright codegen",
+    "report:save": "node ./scripts/save-report.js",
+    "report": "npx playwright test --reporter=html && node ./scripts/save-report.js"
   },
   "devDependencies": {
     "@playwright/test": "latest",

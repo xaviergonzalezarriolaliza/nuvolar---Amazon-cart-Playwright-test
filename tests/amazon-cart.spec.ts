@@ -17,6 +17,8 @@ test.describe('Amazon cart full scenario', () => {
     const qty = await product.setQuantity(2)
     await product.addToCart()
     let summary = await cart.getSummary()
+    console.log('Cart items after first add:', summary.details.length)
+    console.log('Computed total:', summary.computedTotal, 'Displayed subtotal:', summary.displayedTotal)
     expect(summary.details.length).toBeGreaterThan(0)
     const totalItems1 = summary.details.reduce((s, it) => s + it.quantity, 0)
     if (totalItems1 < qty) console.warn(`Requested qty ${qty} but cart has ${totalItems1}`)
@@ -31,6 +33,8 @@ test.describe('Amazon cart full scenario', () => {
     await product.addToCart()
     summary = await cart.getSummary()
     const totalItems2 = summary.details.reduce((s, it) => s + it.quantity, 0)
+    console.log('Cart items after second add:', summary.details.length)
+    console.log('Computed total:', summary.computedTotal, 'Displayed subtotal:', summary.displayedTotal)
     if (totalItems2 < totalItems1) console.warn(`Cart decreased: before=${totalItems1} after=${totalItems2}`)
     if (totalItems2 === totalItems1) console.warn('Second add did not increase total items; site may have restricted quantity or merged items')
     expect(totalItems2).toBeGreaterThanOrEqual(totalItems1)
@@ -45,5 +49,6 @@ test.describe('Amazon cart full scenario', () => {
     const finalFirstQty = summary.details.length ? summary.details[0].quantity : 0
     // Ensure the first item's quantity did not increase after attempting to set it to 1
     expect(finalFirstQty).toBeLessThanOrEqual(prevFirstQty)
+    if (finalFirstQty <= prevFirstQty) console.log(`Quantity update OK: before=${prevFirstQty} after=${finalFirstQty}`)
   })
 })

@@ -1,0 +1,16 @@
+{
+  "name": "amazon-cart-playwright",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cgen": "npx playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "cypress": "^12.17.0"
+  }
+}

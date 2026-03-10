@@ -1,0 +1,1 @@
+{"events":[{"data":{"metricName":"SearchNonAcceptance","platform":"desktop","marketplaceId":"ATVPDKIKX0DER","isError":false,"timestamp":1773139124595,"count":1}},{"data":{"metricName":"HeadLatency","platform":"desktop","marketplaceId":"ATVPDKIKX0DER","isError":false,"timestamp":1773139124027,"latency":295}}]}

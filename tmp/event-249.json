@@ -1,0 +1,26 @@
+{
+  "type": "frame-snapshot",
+  "snapshot": {
+    "callId": "call@82",
+    "snapshotName": "before@call@82",
+    "pageId": "page@624fdbb64226876cc2f6fac469bc5a86",
+    "frameId": "frame@f2875649f40e7cd12641948348941149",
+    "frameUrl": "https://www.amazon.com/s?k=hats+for+men&ref=nb_sb_noss",
+    "doctype": "html",
+    "html": [
+      [
+        1,
+        2624
+      ]
+    ],
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "timestamp": 40742.399,
+    "wallTime": 1773139156840,
+    "collectionTime": 37.10000002384186,
+    "resourceOverrides": [],
+    "isMainFrame": true
+  }
+}

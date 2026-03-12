@@ -4,9 +4,23 @@ import { randomDelay } from '../utils/helpers';
 export class ProductPage {
   constructor(private page: Page) {}
 
+  async getTitle(): Promise<string> {
+    await this.page.waitForSelector('#productTitle', { timeout: 5000 });
+    return (await this.page.textContent('#productTitle'))?.trim() || '';
+  }
+
   async hasAddToCartButton(): Promise<boolean> {
     try {
-      await this.page.waitForSelector('#add-to-cart-button', { timeout: 5000 });
+      await this.page.waitForSelector('#add-to-cart-button', { timeout: 2000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async isCustomizable(): Promise<boolean> {
+    try {
+      await this.page.waitForSelector('input[name="submit.customize"]', { timeout: 1000 });
       return true;
     } catch {
       return false;
@@ -18,17 +32,25 @@ export class ProductPage {
       '#priceblock_ourprice',
       '#priceblock_dealprice',
       '.a-price .a-offscreen',
-      '.a-price-whole',
-      '.a-price .a-price-whole',
-      '.a-price-range',
-      '.a-price'
+      '.a-price-whole'
     ] as const;
     for (const sel of priceSelectors) {
-      if (await this.page.$(sel)) return true;
+      const el = await this.page.$(sel);
+      if (el) {
+        const text = await el.textContent();
+        if (text && /\d/.test(text) && !text.includes('-')) return true;
+      }
     }
     const whole = await this.page.$('.a-price-whole');
     const fraction = await this.page.$('.a-price-fraction');
-    return !!(whole && fraction);
+    if (whole && fraction) {
+      const wholeText = await whole.textContent();
+      const fractionText = await fraction.textContent();
+      if (wholeText && fractionText && /\d/.test(wholeText) && /\d/.test(fractionText)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async capturePrice(): Promise<number> {
@@ -36,16 +58,17 @@ export class ProductPage {
       '#priceblock_ourprice',
       '#priceblock_dealprice',
       '.a-price .a-offscreen',
-      '.a-price-whole',
-      '.a-price .a-price-whole',
-      '.a-price-range'
+      '.a-price-whole'
     ] as const;
     let priceText: string | null = null;
     for (const sel of priceSelectors) {
       const el = await this.page.$(sel);
       if (el) {
-        priceText = await el.textContent();
-        if (priceText) break;
+        const text = await el.textContent();
+        if (text && /\d/.test(text) && !text.includes('-')) {
+          priceText = text;
+          break;
+        }
       }
     }
     if (!priceText) {
@@ -54,21 +77,17 @@ export class ProductPage {
       if (whole && fraction) {
         const wholeText = await whole.textContent();
         const fractionText = await fraction.textContent();
-        if (wholeText && fractionText) {
+        if (wholeText && fractionText && /\d/.test(wholeText) && /\d/.test(fractionText)) {
           priceText = wholeText + '.' + fractionText;
         }
       }
     }
     if (!priceText) {
-      const bodyText = await this.page.textContent('body');
-      const match = bodyText?.match(/\$(\d+\.\d{2})/);
-      if (match) {
-        priceText = match[0];
-      } else {
-        throw new Error('Could not capture price');
-      }
+      throw new Error('Could not capture price');
     }
-    return parseFloat(priceText.replace(/[^0-9.]/g, ''));
+    const cleaned = priceText.replace(/[^0-9.]/g, '');
+    if (!cleaned) throw new Error('Price text contains no digits');
+    return parseFloat(cleaned);
   }
 
   async addToCart(): Promise<void> {
@@ -82,7 +101,6 @@ export class ProductPage {
     }, expectedCount, { timeout: 15000 });
   }
 
-  // ✅ Add this method
   async isCaptchaPage(): Promise<boolean> {
     const bodyText = await this.page.textContent('body');
     return bodyText?.toLowerCase().includes('captcha') ?? false;

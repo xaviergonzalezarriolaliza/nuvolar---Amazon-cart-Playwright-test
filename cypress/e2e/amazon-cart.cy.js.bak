@@ -1,0 +1,203 @@
+/// <reference types="cypress" />
+
+describe('Amazon cart flow (Cypress) – Diagnostic Mode', () => {
+  beforeEach(() => {
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((win) => {
+      win.sessionStorage.clear();
+    });
+  });
+
+  afterEach(() => {
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((win) => {
+      win.sessionStorage.clear();
+    });
+  });
+
+  it('should add hats for men and women, verify cart, and adjust quantity', () => {
+    // --- 1. Ensure cart is empty ---
+    cy.visit('https://www.amazon.com/gp/cart/view.html');
+    cy.get('body').then(($body) => {
+      if ($body.find('.sc-list-item').length) {
+        cy.log('Clearing cart...');
+        cy.get('.sc-list-item').each(($el) => {
+          cy.wrap($el)
+            .find('input[value="Delete"], .sc-action-delete input, .sc-action-delete .a-declarative')
+            .first()
+            .click({ force: true });
+        });
+        cy.get('.sc-list-item', { timeout: 10000 }).should('not.exist');
+      } else {
+        cy.log('Cart already empty.');
+      }
+    });
+
+    cy.setCookie('csm-hit', 'tb:PDC1R05SVG3PNKQQH5E1+s-PDC1R05SVG3PNKQQH5E1|1773235376951&t:1773235376951&adb:adblk_no');
+
+    // --- 2. Track items with detailed info ---
+    const addedItems = [];
+
+    // --- Helper to capture product title and price ---
+    const buyBoxSelector = '#buyNewSection, #buyBoxAccordion, #corePrice_desktop, .a-box-inner, #buyBox';
+    const priceSelector = '#priceblock_ourprice, #priceblock_dealprice, .a-price .a-offscreen, .a-price-whole';
+
+    function captureProductDetails(quantity = 1) {
+      // Capture product title
+      cy.get('#productTitle').invoke('text').then((title) => {
+        const productTitle = title.trim();
+        cy.log(`📦 Product title: "${productTitle}"`);
+
+        // Capture price
+        cy.get(buyBoxSelector)
+          .find(priceSelector)
+          .first()
+          .invoke('text')
+          .then((priceText) => {
+            cy.log(`💰 Raw price text: "${priceText}"`);
+
+            // Handle split prices (e.g., "25" and "99" as separate elements)
+            if (priceText.match(/^\d+$/)) {
+              cy.get('.a-price-fraction').first().invoke('text').then((fraction) => {
+                const fullPrice = priceText + '.' + fraction;
+                processAndPush(productTitle, fullPrice, quantity);
+              });
+            } else {
+              processAndPush(productTitle, priceText, quantity);
+            }
+          });
+      });
+    }
+
+    function processAndPush(title, priceString, quantity) {
+      const currency = priceString.replace(/[\d.,\s]/g, '').trim();
+      const price = parseFloat(priceString.replace(/[^0-9.]/g, ''));
+      cy.log(`✅ Parsed: ${title} – ${price} ${currency} (qty: ${quantity})`);
+      addedItems.push({ title, price, currency, quantity });
+    }
+
+    // --- Helper to search and open first product ---
+    function searchAndOpenFirstProduct(searchTerm) {
+      cy.visit('https://www.amazon.com/');
+      cy.get('input[type="text"][name="field-keywords"]', { timeout: 15000 }).should('be.visible');
+      cy.get('input[type="text"][name="field-keywords"]').clear().type(searchTerm + '{enter}');
+
+      cy.get('div[data-component-type="s-search-result"]', { timeout: 15000 })
+        .should('be.visible')
+        .first()
+        .within(() => {
+          cy.get('a').first().should('be.visible').click({ force: true });
+        });
+
+      cy.location('pathname', { timeout: 20000 }).should((pathname) => {
+        expect(pathname).to.match(/\/dp\/|\/gp\/product\//);
+      });
+      cy.get('#add-to-cart-button', { timeout: 15000 }).should('be.visible');
+    }
+
+    // --- 3. Add men's hat ---
+    cy.log('🟦 Adding MEN\'S hat...');
+    searchAndOpenFirstProduct('hats for men');
+    captureProductDetails(1);
+    cy.get('#add-to-cart-button', { timeout: 20000 }).should('be.visible').click();
+    cy.get('#nav-cart-count', { timeout: 10000 }).should(($el) => {
+      const count = parseInt($el.text().trim(), 10);
+      expect(count).to.equal(1);
+    });
+
+    // --- 4. Add women's hat ---
+    cy.log('🟪 Adding WOMEN\'S hat...');
+    searchAndOpenFirstProduct('hats for women');
+    captureProductDetails(1);
+    cy.get('#add-to-cart-button', { timeout: 20000 }).should('be.visible').click();
+    cy.get('#nav-cart-count', { timeout: 10000 }).should(($el) => {
+      const count = parseInt($el.text().trim(), 10);
+      expect(count).to.equal(2);
+    });
+
+    // --- 5. Open cart and log details ---
+    cy.get('#nav-cart').click();
+    cy.get('.sc-list-item').should('have.length', 2);
+
+    // Log cart items with full details
+    cy.get('.sc-list-item').each(($item, index) => {
+      const title = Cypress.$($item).find('.sc-product-title').text().trim();
+      const price = Cypress.$($item).find('.sc-product-price, .sc-price').first().text().trim();
+      const quantity = Cypress.$($item).find('.a-dropdown-prompt, .sc-quantity-selector').text().trim() || '1';
+      cy.log(`🛒 Cart item ${index + 1}: "${title}" – ${price} (qty: ${quantity})`);
+    });
+
+    // --- 6. Validate subtotal with detailed logging ---
+    cy.then(() => {
+      // Log added items table
+      cy.log('📋 Added items summary:');
+      let addedTable = '\n| # | Title | Price | Currency | Qty |\n|---|-------|-------|----------|-----|';
+      addedItems.forEach((item, idx) => {
+        addedTable += `\n| ${idx + 1} | ${item.title.substring(0, 30)}... | ${item.price} | ${item.currency || ''} | ${item.quantity} |`;
+      });
+      cy.log(addedTable);
+
+      const expectedTotal = addedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      cy.log(`🧮 Expected total: ${expectedTotal}`);
+
+      const currencies = addedItems.map(i => i.currency).filter(Boolean);
+      const uniqueCurrencies = [...new Set(currencies)];
+      if (uniqueCurrencies.length > 1) {
+        cy.log(`⚠️ Multiple currencies: ${uniqueCurrencies.join(', ')}`);
+      }
+
+      // --- Subtotal selectors ---
+      const subtotalSelectors = [
+        '#sc-subtotal-amount-activecart .a-offscreen',
+        '.sc-subtotal .a-offscreen',
+        '.a-size-medium.a-text-bold',
+        '.sc-price',
+        '.a-color-price',
+        '.a-spacing-mini .a-offscreen',
+        '.a-row .a-offscreen',
+        'span:contains("Subtotal") + span .a-offscreen',
+      ];
+
+      const findSubtotalSelector = ($body) => {
+        for (const sel of subtotalSelectors) {
+          if ($body.find(sel).length) return sel;
+        }
+        return null;
+      };
+
+      const assertSubtotal = (retries = 5) => {
+        cy.get('body').then(($body) => {
+          const sel = findSubtotalSelector($body);
+          if (sel) {
+            cy.log(`🔍 Using subtotal selector: ${sel}`);
+            cy.get(sel).first().invoke('text').then((rawText) => {
+              cy.log(`🧾 Raw cart subtotal: "${rawText}"`);
+              const cartCurrency = rawText.replace(/[\d.,\s]/g, '').trim();
+              const cartTotal = parseFloat(rawText.replace(/[^0-9.]/g, ''));
+              cy.log(`💵 Parsed cart total: ${cartTotal} ${cartCurrency}`);
+
+              if (uniqueCurrencies.length > 0 && cartCurrency) {
+                expect(uniqueCurrencies).to.include(cartCurrency);
+              }
+
+              cy.log(`🔬 Comparing: cartTotal=${cartTotal} vs expectedTotal=${expectedTotal} (diff: ${(cartTotal - expectedTotal).toFixed(2)})`);
+              expect(cartTotal).to.be.closeTo(expectedTotal, 0.02);
+            });
+          } else if (retries > 0) {
+            cy.log(`⏳ Subtotal selector not found, retrying... (${retries} left)`);
+            cy.wait(1000).then(() => assertSubtotal(retries - 1));
+          } else {
+            cy.document().then((doc) => {
+              cy.log('❌ Cart page HTML (truncated): ' + doc.documentElement.outerHTML.slice(0, 2000));
+            });
+            throw new Error('Could not find cart subtotal element after retries');
+          }
+        });
+      };
+
+      assertSubtotal();
+    });
+  });
+});

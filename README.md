@@ -1,5 +1,5 @@
-Amazon cart Playwright test
-============================
+"Amazon" cart Playwright test
+=============================
 
 
 2026 - 03 - 12 Finally we moved to testing against saucedemo.com for easiness and quickness after a huge effor trying to beat Amazon anti-bot measures which were really frustrating my attempts.

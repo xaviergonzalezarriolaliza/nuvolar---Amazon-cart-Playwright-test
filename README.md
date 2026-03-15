@@ -2,7 +2,7 @@
 =============================
 
 
-2026 - 03 - 12 Finally we moved to testing against saucedemo.com for easiness and quickness after a huge effor trying to beat Amazon anti-bot measures which were really frustrating my attempts.
+2026 - 03 - 12 Finally we moved to testing against saucedemo.com for easiness and quickness after a huge effort trying to beat Amazon anti-bot measures which were really frustrating my attempts.
 --------------------------------------------------------
 # SauceDemo 9‑Step Cart Flow – Playwright Test
 
@@ -302,3 +302,4 @@ npx playwright show-report
 Notes
 - The POM split keeps selectors and page behaviors isolated for easier maintenance. If you need me to commit these changes and open a PR, I can do that next.
 - Added beforeEach and afterEach hooks to the Cypress test to clear cookies, local storage, and session storage. This was key to achieving consistent, repeatable test runs, especially when rerunning tests multiple times or after reopening Cypress.
+# nuvolar---Amazon-cart-Playwright-test

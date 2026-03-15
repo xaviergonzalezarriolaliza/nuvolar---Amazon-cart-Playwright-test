@@ -303,3 +303,4 @@ Notes
 - The POM split keeps selectors and page behaviors isolated for easier maintenance. If you need me to commit these changes and open a PR, I can do that next.
 - Added beforeEach and afterEach hooks to the Cypress test to clear cookies, local storage, and session storage. This was key to achieving consistent, repeatable test runs, especially when rerunning tests multiple times or after reopening Cypress.
 # nuvolar---Amazon-cart-Playwright-test
+# nuvolar---Amazon-cart-Playwright-test

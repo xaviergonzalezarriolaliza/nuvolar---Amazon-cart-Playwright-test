@@ -70,12 +70,29 @@ test.describe('SauceDemo 9-step scenario (enhanced)', () => {
 
     const expectedItems: Array<{ name: string; qty: number; unitPrice: number }> = [];
 
+    // Helper to log current cart status (based on expectedItems)
+    const logCartStatus = () => {
+      if (expectedItems.length === 0) {
+        console.log('Cart status: (empty)');
+        return;
+      }
+      let total = 0;
+      console.log('Cart status:');
+      expectedItems.forEach(item => {
+        const subtotal = item.qty * item.unitPrice;
+        total += subtotal;
+        console.log(`  - ${item.name} (${item.qty} × $${item.unitPrice.toFixed(2)}) = $${subtotal.toFixed(2)}`);
+      });
+      console.log(`  Total: $${total.toFixed(2)}`);
+    };
+
     // Step: Add first men's item
     await test.step('Add first men’s item', async () => {
       console.log(`Adding: ${menItem1.name}`);
       await inventoryPage.addItemToCart(menItem1.name);
       await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
       expectedItems.push({ name: menItem1.name, qty: 1, unitPrice: menItem1.price });
+      logCartStatus();
     });
 
     // Step: Add second men's item
@@ -84,6 +101,7 @@ test.describe('SauceDemo 9-step scenario (enhanced)', () => {
       await inventoryPage.addItemToCart(menItem2.name);
       await expect(page.locator('.shopping_cart_badge')).toHaveText('2');
       expectedItems.push({ name: menItem2.name, qty: 1, unitPrice: menItem2.price });
+      logCartStatus();
     });
 
     // Step: Verify cart after two men's items
@@ -107,6 +125,7 @@ test.describe('SauceDemo 9-step scenario (enhanced)', () => {
       await inventoryPage.addItemToCart(womenItem!.name);
       await expect(page.locator('.shopping_cart_badge')).toHaveText('3');
       expectedItems.push({ name: womenItem!.name, qty: 1, unitPrice: womenItem!.price });
+      logCartStatus();
     });
 
     // Step: Verify cart after all three items
@@ -130,6 +149,7 @@ test.describe('SauceDemo 9-step scenario (enhanced)', () => {
       await expect(page.locator('.shopping_cart_badge')).toHaveText('2');
       const index = expectedItems.findIndex(i => i.name === menItem1.name);
       if (index !== -1) expectedItems.splice(index, 1);
+      logCartStatus();
     });
 
     // Step: Final verification
@@ -153,5 +173,3 @@ test.describe('SauceDemo 9-step scenario (enhanced)', () => {
     console.log('✅ Test passed!');
   });
 });
-
-// force push 2

@@ -8,6 +8,7 @@ export default defineConfig({
   retries: 1,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
   use: {
+    launchOptions: {    slowMo: 10000     },        // 200 milisegundos entre acciones    
     headless: false,
     viewport: { width: 1280, height: 800 },
     actionTimeout: 30_000,

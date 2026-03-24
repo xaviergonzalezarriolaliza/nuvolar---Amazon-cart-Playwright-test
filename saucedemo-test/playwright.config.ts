@@ -13,6 +13,9 @@ export default defineConfig({
     ['list'] // also show steps in console
   ],
   use: {
+    launchOptions: {
+                      slowMo: 2000,   // delay between actions
+                    },
     actionTimeout: 0,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

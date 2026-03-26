@@ -13,6 +13,6 @@
   },
   "devDependencies": {
     "@playwright/test": "latest",
-    "cypress": "^12.17.0"
+    "cypress": "^12.17.4"
   }
 }

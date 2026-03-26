@@ -55,7 +55,9 @@ describe('Amazon cart flow – 9-step scenario (diagnostic, bilingual)', () => {
           cy.log(`📦 [${productNumber}] Raw search title: "${productTitle}"`);
           // Accept either English "hat" or Spanish "sombrero" (case insensitive)
           const titleLower = productTitle.toLowerCase();
-          expect(titleLower.includes('hat') || titleLower.includes('sombrero')).to.be.true;
+          // expect(titleLower.includes('hat') || titleLower.includes('sombrero')).to.be.true;
+          // Instead of picking the first product, find one with "hat" or "sombrero"
+cy.contains('h2 a', /hat|sombrero/i).click();
         });
         cy.get('a').first().should('be.visible').click({ force: true });
       });

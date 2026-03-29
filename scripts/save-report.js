@@ -22,9 +22,10 @@ console.log('Saved report as', destName)
 
 try {
   // Force-add and commit the timestamped report, then push
+  const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
   execSync(`git add -f "${destName}"`, { cwd: repoRoot, stdio: 'inherit' })
   execSync(`git commit -m "chore(report): add ${destName}"`, { cwd: repoRoot, stdio: 'inherit' })
-  execSync('git push origin master', { cwd: repoRoot, stdio: 'inherit' })
+  execSync(`git push origin ${branch}`, { cwd: repoRoot, stdio: 'inherit' })
   console.log('Report committed and pushed as', destName)
 } catch (e) {
   console.error('Failed to commit/push report:', e.message)
